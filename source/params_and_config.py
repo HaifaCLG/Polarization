@@ -9,7 +9,7 @@ SUMMER_PERIOD_MONTHS = ["04", "05", "06", "07", "08", "09"]
 
 
 ###########PATHS#################
-data_path = "D:\\data\\gili"
+data_path = "/data"
 
 ##PROCESSED DATA PATHS##
 processed_knesset_data_path = os.path.join(data_path,"processed_knesset")
