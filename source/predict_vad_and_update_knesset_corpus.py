@@ -514,6 +514,10 @@ def print_highest_and_lowest_vad_sentences(vad_shards_dir, vad_column, filter_sh
     else:
         print(f'wrong vad_column: {vad_column}')
         return
+if highest_lowest_committee_path:
+        if not os.path.exists(highest_lowest_committee_path):
+            os.makedirs(highest_lowest_committee_path)
+        output_path = os.path.join(highest_lowest_committee_path, f'{session_english_name}_{vad_column}_highest_lowest.txt')
     ten_highest_score_sentences = []
     ten_lowest_score_sentences = []
     for shard in os.listdir(vad_shards_dir):
@@ -528,30 +532,36 @@ def print_highest_and_lowest_vad_sentences(vad_shards_dir, vad_column, filter_sh
             if filter_non_hebrew and not is_hebrew(sent_text, print_non_hebrew=False):
                 continue
             sent_score = sent["vad_values"][vad_column]
-            if len(ten_highest_score_sentences) < 10:
-                ten_highest_score_sentences.append({"sentence_text": sent["sentence_text"], "score": sent_score, "protocol_name":sent["protocol_name"], "speaker_name":sent["speaker_name"]})
-                ten_highest_score_sentences = sorted(ten_highest_score_sentences, key=itemgetter('score'), reverse=True)
+            if len(ten_highest_score_sentences) < 20:
+                if not sent_text in [item["sentence_text"] for item in ten_highest_score_sentences]:
+                    ten_highest_score_sentences.append({"sentence_text": sent["sentence_text"], "score": sent_score, "protocol_name":sent["protocol_name"], "speaker_name":sent["speaker_name"]})
+                    ten_highest_score_sentences = sorted(ten_highest_score_sentences, key=itemgetter('score'), reverse=True)
             else:
                 lowest_high_sent = ten_highest_score_sentences[-1]
-                if sent_score > lowest_high_sent["score"]:
+                if sent_score > lowest_high_sent["score"] and not sent_text in [item["sentence_text"] for item in ten_highest_score_sentences]:
                     ten_highest_score_sentences.pop(-1)
                     ten_highest_score_sentences.append({"sentence_text":sent["sentence_text"], "score":sent_score, "protocol_name":sent["protocol_name"], "speaker_name":sent["speaker_name"]})
                     ten_highest_score_sentences = sorted(ten_highest_score_sentences, key=itemgetter('score'), reverse=True)
             if len(ten_lowest_score_sentences) < 20:
-                ten_lowest_score_sentences.append({"sentence_text": sent["sentence_text"], "score": sent_score, "protocol_name":sent["protocol_name"], "speaker_name":sent["speaker_name"]})
-                ten_lowest_score_sentences = sorted(ten_lowest_score_sentences, key=itemgetter('score'))
+                if not sent_text in [item["sentence_text"] for item in ten_lowest_score_sentences]:
+                    ten_lowest_score_sentences.append({"sentence_text": sent["sentence_text"], "score": sent_score, "protocol_name":sent["protocol_name"], "speaker_name":sent["speaker_name"]})
+                    ten_lowest_score_sentences = sorted(ten_lowest_score_sentences, key=itemgetter('score'))
             else:
                 highest_low_sent = ten_lowest_score_sentences[-1]
-                if sent_score < highest_low_sent["score"]:
+                if sent_score < highest_low_sent["score"] and not sent_text in [item["sentence_text"] for item in ten_lowest_score_sentences]:
                     ten_lowest_score_sentences.pop(-1)
                     ten_lowest_score_sentences.append({"sentence_text": sent["sentence_text"], "score": sent_score, "protocol_name":sent["protocol_name"], "speaker_name":sent["speaker_name"]})
                     ten_lowest_score_sentences = sorted(ten_lowest_score_sentences, key=itemgetter('score'))
-    print(f'{vad_column} - ten highest scores sentences are:')
-    for sent in ten_highest_score_sentences:
-        print(f'{sent["sentence_text"]}, score: {round(sent["score"], 4)}')
-    print(f'{vad_column} - twenty lowest scores sentences are:')
-    for sent in ten_lowest_score_sentences:
-        print(f'{sent["sentence_text"]}, score: {round(sent["score"], 4)}')
+    with open(output_path, "w", encoding="utf-8") as f:
+        # highest‐score sentences
+        f.write(f"{vad_column} - twenty highest scores sentences are:\n")
+        for sent in ten_highest_score_sentences:
+            f.write(f"{sent['sentence_text']}, score: {round(sent['score'], 4)}\n")
+
+        # lowest‐score sentences
+        f.write(f"\n{vad_column} - twenty lowest scores sentences are:\n")
+        for sent in ten_lowest_score_sentences:
+            f.write(f"{sent['sentence_text']}, score: {round(sent['score'], 4)}\n")
 
 def calculate_protocols_male_female_numbers_dict(protocols_male_female_values):
     protocols_male_female_numbers_list = []
@@ -710,9 +720,9 @@ if __name__ == '__main__':
     this_session_dir = os.path.join(vad_values_committees_dir, session_english_name)
     vad_output_dir_path = os.path.join(this_session_dir, "vad_shards")
     # temp_change_names_of_shards_to_fit_original(vad_output_dir_path, "tmp_name_changes_funds.txt")
-    # print_highest_and_lowest_vad_sentences(vad_output_dir_path, "v", filter_short_sentences=True, filter_non_hebrew = True)
-    # print_highest_and_lowest_vad_sentences(vad_output_dir_path, "a", filter_short_sentences=True, filter_non_hebrew = True)
-    # print_highest_and_lowest_vad_sentences(vad_output_dir_path, "d", filter_short_sentences=True, filter_non_hebrew = True)
+    print_highest_and_lowest_vad_sentences(vad_output_dir_path, "v", filter_short_sentences=True, filter_non_hebrew = True)
+    print_highest_and_lowest_vad_sentences(vad_output_dir_path, "a", filter_short_sentences=True, filter_non_hebrew = True)
+    print_highest_and_lowest_vad_sentences(vad_output_dir_path, "d", filter_short_sentences=True, filter_non_hebrew = True)
 
 
     relevant_sentences_dir_path = os.path.join(this_session_dir,"sentences_shards")

@@ -41,6 +41,24 @@ def calculate_pairwise_tau(data):
     mean_pairwise_tau = np.mean(all_pairs_taus)
     print(f'{VAD_value} mean pairwise tau: {mean_pairwise_tau}')
 
+def calculate_pairwise_pearson_and_spearman(data):
+    all_pairs_pearson = []
+    all_pairs_spearman = []
+    for comb in itertools.combinations(columns, 2):
+        print(comb)
+        pearson_r, pval = pearsonr(data[comb[0]], data[comb[1]])
+        print(f"pearson: {'%.2f' % pearson_r}, pearson_p:  {'%.2f' % pval}")
+        all_pairs_pearson.append(pearson_r)
+        rho, _ = spearmanr(data[comb[0]], data[comb[1]])
+        print(f"Spearman’s rho: {rho:.4f}")
+        all_pairs_spearman.append(rho)
+        print()
+    mean_pairwise_pearson = np.mean(all_pairs_pearson)
+    mean_pairwise_spearman = np.mean(all_pairs_spearman)
+    print(f'{VAD_value} mean pairwise pearson: {mean_pairwise_pearson}')
+    print(f'{VAD_value} mean pairwise spearman: {mean_pairwise_spearman}')
+
+
 
 if __name__ == '__main__':
     VAD_value = "A"
@@ -49,6 +67,8 @@ if __name__ == '__main__':
 
     # Extract the average rankings adjusting for ties
     # columns = ['shira_rank_avg_tie', 'israel_rank_avg_tie', 'avia_rank_avg_tie']
+    columns = ['shira_scores', 'israel_scores', 'avia_scores']
+    calculate_pairwise_pearson_and_spearman(data)
     columns = ['shira_rank_avg_tie', 'israel_rank_avg_tie', 'avia_rank_avg_tie']
 
     rankings = data[columns]
